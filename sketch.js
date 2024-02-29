@@ -19,16 +19,26 @@ function setup() {
   createCanvas(X_RANGE, Y_RANGE, WEBGL);
 	initializeWebcamAndHandTracker();
   
+
+  //test model, typical size
   let test_model = [];
   let x = 25;
   let y = 10;
   let z = 10;
+
+  //test model, performance
+  // x = 10;
+  // y = 6;
+  // z = 6;
   
   for(let i = 0; i < x*y*z; i++){
-    test_model[i] = (i%1==0);
+    test_model[i] = (i%3==0);
   }
+  
 
   test1 = new Model(test_model, x, y, z, floor(z*y/2-z/2), x*y*z - floor(z*y/2-z/2));
+
+
 }
 
 //----------------------------

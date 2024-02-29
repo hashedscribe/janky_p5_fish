@@ -29,14 +29,18 @@ class Model{
         //boid info
         this.boids = new Array(this.x_size * this.y_size * this.z_size);
         this.boids_spacing = 8;
-        this.boids_size = 3;
+        this.boids_size = 1.5;
         this.orientation;
 
         for(let i = 0; i < this.boids.length; i++){
             if(this.model_blueprint[i]){
                 this.boids[i] = new Boid(this, i);
-            }else{
-                this.boids[i] = -1;
+            }
+        }
+
+        for(let i = 0; i < this.boids.length; i++){
+            if(this.model_blueprint[i]){
+                this.boids[i].define_ref_points();
             }
         }
 
@@ -63,9 +67,6 @@ class Model{
     }
     
     pick_next_point(){ //picks the next point to move to
-
-        //include search for smallest change in direction to avoid the 
-
         let best_waypoint = this.waypoints[0];
         let best_distance = 0;
         for(let i = 1; i < this.waypoints.length; i++){
@@ -100,24 +101,26 @@ class Model{
         return final;
     }
 
-
     move_points(){
         for(let i = 0; i < this.boids.length; i++){
-            let translation = this.curr_position;
+            if(this.model_blueprint[i]){
+                let translation = this.curr_position;
 
-            let mapped_x = map(this.boids[i].base.x, 0, this.x_size, 0, 0.5);
-            let y_animation = createVector(0, 0, sin(millis()/500+mapped_x)*10);
+                let mapped_x = map(this.boids[i].base.x, 0, this.x_size, 0, 0.5);
+                let y_animation = createVector(0, 0, sin(millis()/500+mapped_x)*10);
 
-            let vectors = [
-                createVector(0, 0, 0),
-                translation,
-                y_animation
-            ]
+                let vectors = [
+                    createVector(0, 0, 0),
+                    translation,
+                    y_animation,
+                    createVector(0, 0, 0)
+                ];
 
-            this.boids[i].add_offset(this.vector_sum(vectors));
-        }
+                this.boids[i].add_offset(this.vector_sum(vectors));
+                }
+            }
+            
     }
-
 
 
     update(){
@@ -132,22 +135,42 @@ class Model{
 
         this.move_points();
 
-
         if(this.curr_position.dist(this.target_waypoint) < WAYPOINT_RADIUS){
             this.pick_next_point();
+        }
+
+        /* ------------------------------ update points ----------------------------- */
+
+        for(let i = 0; i < this.boids.length; i++){
+            if(this.model_blueprint[i]){
+                this.boids[i].choose_law();
+                this.boids[i].calculate_forces();
+            }
+            
+        }
+        for(let i = 0; i < this.boids.length; i++){
+            if(this.model_blueprint[i]){
+                this.boids[i].update();
+            }
         }
     }
 
     draw(){
+        for(let i = 0; i < this.boids.length; i++){
+            if(this.model_blueprint[i]){
+                this.boids[i].draw();
+            }
+        }
         // this.orient_next_point();
         // console.log(direction_heading);
     }
 
     debug(){
-        /* ---------------------------- reveal waypoints ---------------------------- */
         ambientLight(255);
         noStroke();
 
+        /* ---------------------------- reveal waypoints ---------------------------- */
+        
         // ambientMaterial(255, 130, 230);
         // for(let i = 0; i < this.waypoints.length; i++){
         //     push();
@@ -155,24 +178,30 @@ class Model{
         //     sphere(10);
         //     pop();
         // }
+
+
+        /* ------------------------------- model home ------------------------------- */
         
         for(let i = 0; i < this.boids.length; i++){
-            if(i == this.head || i == this.tail){ //bug, not selecting the middle
-                ambientMaterial(230, 0, 0);
-            }else{
-                ambientMaterial(70, 130, 230);
-            }
-
             if(this.model_blueprint[i]){
-                this.boids[i].debug();
+                if(i == this.head || i == this.tail){ //bug, not selecting the middle
+                    ambientMaterial(230, 0, 0);
+                }else{
+                    ambientMaterial(70, 130, 230);
+                }
+
+                if(this.model_blueprint[i]){
+                    this.boids[i].debug();
+                }
             }
-            
         }
 
-        ambientMaterial(50, 240, 0);
-        push();
-        translate(this.curr_position.x, this.curr_position.y, this.curr_position.z);
-        sphere(10);
-        pop();
+        /* ------------------------------ model center ------------------------------ */
+
+        // ambientMaterial(50, 240, 0);
+        // push();
+        // translate(this.curr_position.x, this.curr_position.y, this.curr_position.z);
+        // sphere(10);
+        // pop();
     }
 }
