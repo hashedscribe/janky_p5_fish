@@ -20,8 +20,8 @@ function setup() {
 	initializeWebcamAndHandTracker();
   
   let test_model = [];
-  let x = 15;
-  let y = 20;
+  let x = 25;
+  let y = 10;
   let z = 10;
   
   for(let i = 0; i < x*y*z; i++){
@@ -35,7 +35,7 @@ function setup() {
 function draw() {
   background("#0D1233");
 
-  let shader = false;
+  let shader = true;
 
   if(shader){
     filter(bg_shader);
@@ -63,7 +63,7 @@ function drawAllHandPoints(){
       let aKeypoint = points_3D[j];
       let shift_2D = points_2D[j];
       push();
-      translate(floor(shift_2D.x/dist_mapped)/3 - X_RANGE/4, floor(shift_2D.y/dist_mapped)/3 - Y_RANGE/4, -300 + dist_scale*dist_mapped*5); //YAY IT WORKS OK COOL COOL COOL
+      translate(floor(shift_2D.x/dist_mapped)/3 - X_RANGE/4, floor(shift_2D.y/dist_mapped)/3 - Y_RANGE/4, -200 + dist_scale*dist_mapped*5); //YAY IT WORKS OK COOL COOL COOL
       translate(0, 0 , -aKeypoint.z*1000);
       
       sphere(2);

@@ -16,15 +16,16 @@ class Boid{
         this.pos = createVector(0, 0, 0).add(this.offset);
         this.vel;
         this.acc;
+        //cant do set neighbours bc after panic it needs to check everything
         this.neighbours = []; //neighbours in cross calculation
     }
 
     calculate_neighbours(){ // in set up or smth, maybe just do in the constructor
-
-    }
-    
-    calculate_offset(){
         
+    }
+
+    add_offset(offset){
+        this.offset = this.base.copy().add(offset);
     }
 
     update(){
@@ -46,14 +47,26 @@ class Boid{
                 ali_sum.add(this.neighbours[i].pos);
             }
         }
+
+        /* --------------------------------- neyhhh --------------------------------- */
+
+        // homing
+        if(this.pos.dist(this.base) > this.parent.boids_spacing){
+            console.log("OUT OF HOME");
+            ali_sum = this.base;
+        }
     
-        //homing
         //object aviodance (RUN)
 
         this.acc = 0/this.neighbours.length; //do math here;
+        this.acc.normalize(); //no crazy forccs
+        
         //make sure it doesnt go over max;
         this.vel += this.acc;
         //make sure it doesnt go over max;
+
+
+        /* -------------------------------------------------------------------------- */
 
         //final step
         this.pos += this.vel + this.parent.offset[this.index];
@@ -62,7 +75,6 @@ class Boid{
     draw(){
         push();
         translate(this.pos.x, this.pos.y, this.pos.z);
-        // rotate(this.parent.orientation);
         sphere(this.parent.boids_size);
         pop();
     }
