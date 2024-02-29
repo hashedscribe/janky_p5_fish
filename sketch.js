@@ -8,6 +8,9 @@ let hands = [];
 let trackerOptions = { maxHands: 2, flipHorizontal: true };
 let webcamAlpha = 255; // reduce this to make video transparent
 
+/* --------------------------------- canvas --------------------------------- */
+let bg_shader;
+
 /* --------------------------------- models --------------------------------- */
 let test1;
 
@@ -15,6 +18,7 @@ let test1;
 function setup() {
   createCanvas(X_RANGE, Y_RANGE, WEBGL);
 	initializeWebcamAndHandTracker();
+  
   let test_model = [];
   let x = 15;
   let y = 20;
@@ -23,17 +27,26 @@ function setup() {
   for(let i = 0; i < x*y*z; i++){
     test_model[i] = (i%1==0);
   }
-  test1 = new Model(test_model, x, y, z);
+
+  test1 = new Model(test_model, x, y, z, floor(z*y/2-z/2), x*y*z - floor(z*y/2-z/2));
 }
 
 //----------------------------
 function draw() {
-	background("grey");
-	// drawWebcamVideo(); 
-	drawAllHandPoints(); 
-	orbitControl();
+  background("#0D1233");
 
+  let shader = false;
+
+  if(shader){
+    filter(bg_shader);
+  }else{
+    perspective(PI / 3.0, width/height, 0.1, 1000000);
+  }
+  
+  drawAllHandPoints(); 
+	orbitControl();
   test1.update();
+  test1.draw();
   test1.debug();
 }
 
@@ -46,19 +59,14 @@ function drawAllHandPoints(){
     let dist_scale = createVector(points_2D[WRIST].x, points_2D[WRIST].y).dist(createVector(points_2D[MIDDLE_MCP].x, points_2D[MIDDLE_MCP].y));
     dist_mapped = map(dist_scale, 0, 350, 0, 1);
 
-    // console.log(rot_level);
-
     for (let j = 0; j < points_3D.length; j++) {
       let aKeypoint = points_3D[j];
       let shift_2D = points_2D[j];
       push();
-      translate(floor(shift_2D.x/dist_mapped)/3 - X_RANGE/4, floor(shift_2D.y/dist_mapped)/3 - Y_RANGE/4, -250 + dist_scale*dist_mapped*5); //YAY IT WORKS OK COOL COOL COOL
+      translate(floor(shift_2D.x/dist_mapped)/3 - X_RANGE/4, floor(shift_2D.y/dist_mapped)/3 - Y_RANGE/4, -300 + dist_scale*dist_mapped*5); //YAY IT WORKS OK COOL COOL COOL
       translate(0, 0 , -aKeypoint.z*1000);
-      //puts in the right place relative to each other + rotation
-      // translate(((aKeypoint.x*500)), ((aKeypoint.y)*500), (-aKeypoint.z*500 + MIN_SCREEN_DIST));
-      //translate forward
       
-      sphere(5);
+      sphere(2);
       pop();
     }
   }
@@ -91,6 +99,7 @@ function drawWebcamVideo(){
 //----------------------------
 function preload() {
   // Load the Handpose model.
+  bg_shader = loadShader('vertex.glsl', 'fragment.glsl');
   myHandTracker = ml5.handpose(trackerOptions);
 }
 function gotHands(results) { 

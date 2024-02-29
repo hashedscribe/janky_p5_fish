@@ -13,21 +13,18 @@ const WAYPOINT_RADIUS = 5;
 function random_valid_vector(){
     x = -X_RANGE/2 + random(X_RANGE);
     y = -Y_RANGE/2 + random(Y_RANGE);
-    z = random(Z_RANGE) + 50;
+    z = -Z_RANGE/2 + random(Z_RANGE);
     return createVector(x, y, z);
 }
 
 class Model{
-    constructor(model_blueprint, x, y, z){
+    constructor(model_blueprint, x, y, z, head, tail){
         /* -------------------------------- modelling ------------------------------- */
         this.x_size = x;
         this.y_size = y;
         this.z_size = z;
 
         this.model_blueprint = model_blueprint;
-
-        this.head = createVector(0, 0, 0);
-        this.tail = createVector(0, 0, 0);
 
         //boid info
         this.boids = new Array(this.x_size * this.y_size * this.z_size);
@@ -43,14 +40,21 @@ class Model{
             }
         }
 
+        this.head = head;
+        this.tail = tail;
+
         /* ------------------------------- navigation ------------------------------- */
         this.target_waypoint = createVector(0, 0, 0);
         this.curr_position = random_valid_vector();
+        this.curr_velocity = createVector(10, 10, 10);
+        this.curr_acceleration = createVector(0, 0, 0);
         this.waypoints = []; //list of next points to hit
 
-        for(let i = 0; i < 5; i++){
+        for(let i = 0; i < 1; i++){
             this.waypoints.push(random_valid_vector());
         }
+
+        this.pick_next_point();
 
         /* --------------------------------- offset --------------------------------- */
         this.xfunc; // maybe
@@ -77,10 +81,13 @@ class Model{
     }
     
     orient_next_point(){ //move the head and tail so that it's in line (or smth similar)
-        //see if p5js has a bounding obj parent or something like that
-        //also could use the rotate thing, i just checked i dont think there is
-
-
+        let x_heading = createVector(this.curr_position.x, this.curr_position.z).angleBetween(createVector(this.target_waypoint.x, this.target_waypoint.z));
+        let y_heading = createVector(this.curr_position.y, this.curr_position.z).angleBetween(createVector(this.target_waypoint.y, this.target_waypoint.z));
+        push();
+        translate(this.curr_position.x, this.curr_position.y, this.curr_position.z);
+        rotateX(x_heading*2);
+        rotateY(y_heading*2);
+        pop();
     }
 
     update(){
@@ -88,15 +95,24 @@ class Model{
         //if close enough to the target waypoint, then start charting to the next waypoint
         
         //get current position
+        this.curr_acceleration = this.target_waypoint.normalize(); //point a normalized vector pointing at the target
+        this.curr_velocity.add(this.curr_acceleration);
+        this.curr_position.add(this.curr_velocity);
 
+        console.log(this.curr_acceleration);
+        
+        // console.log(this.curr_position, this.curr_acceleration);
+        // let direction_heading = this.curr_position.sub(this.target_waypoint);
         if(this.curr_position.dist(this.target_waypoint) < WAYPOINT_RADIUS){
             this.pick_next_point();
         }
-        this.orient_next_point();
+        
+
     }
 
     draw(){
-
+        // this.orient_next_point();
+        // console.log(direction_heading);
     }
 
     debug(){
@@ -113,8 +129,8 @@ class Model{
         }
         
         for(let i = 0; i < this.boids.length; i++){
-            if(i == 0 || i == floor(this.boids.length-1)){ //bug, not selecting the middle
-                ambientMaterial(0, 0, 230);
+            if(i == this.head || i == this.tail){ //bug, not selecting the middle
+                ambientMaterial(230, 0, 0);
             }else{
                 ambientMaterial(70, 130, 230);
             }
@@ -124,5 +140,11 @@ class Model{
             }
             
         }
+
+        ambientMaterial(50, 240, 0);
+        push();
+        translate(this.curr_position.x, this.curr_position.y, this.curr_position.z);
+        sphere(10);
+        pop();
     }
 }
